@@ -11,10 +11,12 @@
 
 4. Migrate the data to the database **python manage.py demo-fixtures**
 
+5. To Write the queries below on the terminal type **python manage.py shell**
+
 # 1. Retrieve a product sub-products
 
 ``` 
-from ecommerce.inventory.models import Product, ProductInventory
+from ecommerce.inventory.models import ProductInventory
 
 ProductInventory.objects.filter(product_id=1)
 
@@ -41,7 +43,7 @@ x = Media.objects.raw("SELECT * from inventory_media INNER JOIN inventory_produc
 # 3.  Retrieve all values associated to a sub-product
 
 ```
-from ecommerce.inventory.models import Media
+from ecommerce.inventory.models import  ProductAttributeValue
 
 x = ProductAttributeValue.objects.filter(product_attribute_values__id=1)
 
@@ -56,6 +58,8 @@ x = ProductAttributeValue.objects.raw("SELECT * FROM inventory_productattributev
 # 4. Retrieve the product attributes for a given product type
 
 ```
+from ecommerce.inventory.models import ProductAttribute
+
 x = ProductAttribute.objects.filter(product_type_attributes=1)
 
 x = ProductAttribute.objects.raw("SELECT * FROM inventory_productattribute INNER JOIN inventory_producttypeattribute ON inventory_productattribute.id = inventory_producttypeattribute.product_attribute_id WHERE inventory_producttypeattribute.product_type_id = 1")
@@ -77,3 +81,65 @@ x = Product.objects.raw("SELECT * FROM inventory_product INNER JOIN inventory_pr
 ```
 
 
+# 6. Retrieve all sub-products that has less than 50 units left in stock
+
+```
+from ecommerce.inventory.models import ProductInventory
+
+x = ProductInventory.objects.filter(product_inventory__units__lte=50)
+
+x = ProductInventory.objects.raw("SELECT * FROM inventory_productinventory INNER JOIN inventory_stock ON (inventory_productinventory.id = inventory_stock.product_inventory_id) WHERE inventory_stock.units <= 50")
+
+```
+
+
+# 7. Retrieve all sub-products which have been stock checked in the last month
+
+```
+from ecommerce.inventory.models import ProductInventory
+
+x = ProductInventory.objects.filter(product_inventory__last_checked__range=('2020-09-01','2022-10-10'))
+
+x = ProductInventory.objects.raw("SELECT * FROM inventory_productinventory INNER JOIN inventory_stock ON (inventory_productinventory.id = inventory_stock.product_inventory_id) WHERE inventory_stock.last_checked BETWEEN '2020-01-01 00:00:00' AND '2022-10-10 00:00:00'")
+
+```
+
+
+# 8. Retrieve all sub-products which have been stock checked in the last month
+
+```
+
+from ecommerce.inventory.models import Product
+
+x = Product.objects.filter(product__product_type__product_type_attributes__id=1).distinct().count()
+
+x = Product.objects.raw("SELECT DISTINCT inventory_product.id FROM inventory_product INNER JOIN inventory_productinventory ON (inventory_product.id = inventory_productinventory.product_id) INNER JOIN inventory_producttype ON (inventory_productinventory.product_type_id = inventory_producttype.id) INNER JOIN inventory_producttypeattribute ON (inventory_producttype.id = inventory_producttypeattribute.product_type_id) WHERE inventory_producttypeattribute.product_attribute_id = 1")
+
+```
+
+
+
+# 9.  Retrieve all woman shoes by the xyz brand
+
+
+```
+
+from ecommerce.inventory.models import Brand
+
+
+ x = Brand.objects.filter(brand__product_type__product_type_attributes__id=1).distinct()
+
+x = Product.objects.raw("SELECT DISTINCT inventory_brand.id, inventory_brand.name FROM inventory_product INNER JOIN inventory_productinventory ON (inventory_brand.id = inventory_productinventory.brand_id) INNER JOIN inventory_producttype ON (inventory_productinventory.product_type_id = inventory_producttype.id) INNER JOIN inventory_producttypeattribute ON (inventory_producttype.id = inventory_producttypeattribute.product_type_id) WHERE inventory_producttypeattribute.product_attribute_id = 1")
+```
+
+# 10. Retrieve all sub-products which have been stock checked in the last month
+
+```
+
+from ecommerce.inventory.models import Product
+
+x = Product.objects.filter(product__brand_id=1)
+
+x = Product.objects.raw("SELECT * FROM inventory_product INNER JOIN inventory_productinventory ON (inventory_product.id = inventory_productinventory.product_id) WHERE inventory_productinventory.brand_id = 1")
+
+```
